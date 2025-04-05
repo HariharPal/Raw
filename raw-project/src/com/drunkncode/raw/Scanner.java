@@ -27,6 +27,7 @@ import static com.drunkncode.raw.TokenType.NUMBER;
 import static com.drunkncode.raw.TokenType.OR;
 import static com.drunkncode.raw.TokenType.PLUS;
 import static com.drunkncode.raw.TokenType.PRINT;
+import static com.drunkncode.raw.TokenType.RETURN;
 import static com.drunkncode.raw.TokenType.RIGHT_BRACE;
 import static com.drunkncode.raw.TokenType.RIGHT_PAREN;
 import static com.drunkncode.raw.TokenType.SEMICOLON;
@@ -38,7 +39,6 @@ import static com.drunkncode.raw.TokenType.THIS;
 import static com.drunkncode.raw.TokenType.TRUE;
 import static com.drunkncode.raw.TokenType.VAR;
 import static com.drunkncode.raw.TokenType.WHILE;
-import static com.drunkncode.raw.TokenType.RETURN;
 
 import java.util.ArrayList;
 import java.util.HashMap;

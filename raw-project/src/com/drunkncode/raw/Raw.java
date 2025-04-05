@@ -58,11 +58,16 @@ public class Raw {
   }
 
   private static void run(String source) {
-    Scanner sc = new Scanner(System.in);
+    Scanner sc = new Scanner(source);
     List<Token> tkns = sc.scanTokens();
+    Parser parser = new Parser(tkns);
+    Expr expression = parser.parse();
+
+    if(hadError) return;
+    System.out.println(new AstPrinter().print(expression));
 
     for (Token tkn : tkns) {
-      System.out.println(token);
+      System.out.println(tkn);
     }
   }
 
@@ -74,5 +79,13 @@ public class Raw {
     System.err.println("[line " + line + "] Error " + where + " : " + message);
     // reporting main fuunction that it's had an error
     hadError = true;
+  }
+
+  static void error(Token token, String message){
+    if(token.type == TokenType.EOF){
+      report(token.line, " at end ", message);
+    }else{
+      report(token.line, " at " + token.lexeme + "'" ,message);
+    }
   }
 }
