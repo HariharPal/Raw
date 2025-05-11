@@ -28,22 +28,43 @@ public class GenerateAst {
                 outputDir,
                 "Expr",
                 Arrays.asList(
-                    "Binary : Expr left, Token operator, Expr right",
+
+                        "Assign : Token name, Expr value",
+                        "Comma : Expr left, Token comma, Expr right",
+                        "Call : Expr callee, Token paren, List<Expr> arguments",
+                        "Get : Expr object, Token name",
+                        "Set : Expr object, Token name, Expr value",
+                        "Super : Token keyword, Token method",
+                        "This : Token keyword",
+                        "Logical : Expr left, Token operator, Expr right",
+                        "Binary : Expr left, Token operator, Expr right",
                         "Grouping : Expr expression",
                         "Literal : Object value",
-                        "Unary : Token operator, Expr right"));
+                        "Unary : Token operator, Expr right",
+                        "AnonymousFunction : Token name, List<Token> params, List<Stmt> body",
+                        "Variable : Token name",
+                        "Ternary: Expr condition, Expr trueExpr, Expr falseExpr"));
+        defineAst(outputDir, "Stmt", Arrays.asList("Block : List<Stmt> statements",
+                "Class : Token name, Expr.Variable superclass, List<Stmt.Function> methods, List<Stmt.Function> classMethods",
+                "While : Expr condition, Stmt body, Expr increment",
+                "Break : Token keyword",
+                "Continue : Token keyword",
+                "Function : Token name, List<Token> params, List<Stmt> body",
+                "If : Expr condition, Stmt thenBranch, Stmt elseBranch",
+                "Return : Token keyword, Expr value",
+                "Expression : Expr expression", "Print : Expr expression", "Println : Expr expression",
+                "Var : Token name, Expr initializer"));
     }
 
     private static void defineAst(String outputDir, String baseName, List<String> types)
             throws IOException {
-                System.out.println(outputDir + "/" + baseName + ".java");
-                System.out.println("Code is running in defineAst");
-                String path  = outputDir + "/" + baseName + ".java";
-                PrintWriter writer = new PrintWriter(path, "UTF-8");
+        System.out.println(outputDir + "/" + baseName + ".java");
+        System.out.println("Code is running in defineAst");
+        String path = outputDir + "/" + baseName + ".java";
+        PrintWriter writer = new PrintWriter(path, "UTF-8");
 
-                
         writer.println("package com.drunkncode.raw;");
-        
+
         writer.println();
         writer.println("import java.util.List;");
         writer.println();
@@ -60,17 +81,17 @@ public class GenerateAst {
             defineType(writer, baseName, className, fieldList);
 
         }
-        
+
         // the base accept() method
         writer.println();
         writer.println("    abstract <R> R accept(Visitor<R> visitor);");
-        
+
         writer.println("}");
         writer.println();
         System.out.println("Writer is closed.");
         writer.close();
     }
-    
+
     // for each subclass we're declaring a visit method for each one.
     private static void defineVisitor(PrintWriter writer, String baseName, List<String> types) {
         System.out.println("Code is running in defineVisitor");

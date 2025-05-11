@@ -1,0 +1,14 @@
+class Person {
+    init(height, weight) {
+        this.height = height;
+        this.weight = weight;
+    }
+
+    printit() {
+        return this.height + " " + this.weight;
+    }
+}
+
+var per = Person(43, 56);
+print per.printit();
+
