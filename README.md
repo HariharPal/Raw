@@ -1,13 +1,6 @@
-<<<<<<< HEAD
-# Raw
-<<<<<<< HEAD
-Raw is a language.
-=======
-# Raw
->>>>>>> 4d684b6 (Initial commit)
-=======
-=======
-# Raw
-Raw is a language.
->>>>>>> ca880d8 (Initial commit)
->>>>>>> a7356c2 (Initial commit)
+ # Raw 
+ Raw is a dynamically typed language.
+
+## How to run this language
+  1> Clone this respostiory in your prefered directory.
+  2> Generate class file for Raw by running commands.
