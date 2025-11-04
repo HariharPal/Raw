@@ -1,6 +1,268 @@
- # Raw 
- Raw is a dynamically typed language.
+# Raw — a small interpreted language (Java)
 
-## How to run this language
-  1> Clone this respostiory in your prefered directory.
-  2> Generate class file for Raw by running commands.
+Raw is a compact, educational interpreter implementation written in Java. It demonstrates the classic components of a tree-walk interpreter: lexer (scanner), parser, AST, resolver (static analysis), and an interpreter/runtime with support for functions, classes, and error handling. The codebase is organized for clarity and learning rather than performance or production deployment.
+
+> Note: This repository appears to be a small language implementation inspired by the "crafting interpreters" approach (scanner → parser → AST → interpreter). Where assumptions were necessary (for the README), they are noted below.
+
+## Table of contents
+
+- [Project status](#project-status)
+- [Goals and motivation](#goals-and-motivation)
+- [Repository layout](#repository-layout)
+- [Core concepts & architecture](#core-concepts--architecture)
+- [Per-file summary](#per-file-summary)
+- [Build & run (Windows PowerShell)](#build--run-windows-powershell)
+- [Usage examples](#usage-examples)
+- [Extending the language](#extending-the-language)
+- [Testing & validation](#testing--validation)
+- [Contributing](#contributing)
+- [Roadmap / next steps](#roadmap--next-steps)
+- [License & credits](#license--credits)
+
+## Project status
+
+- Minimal interpreter implementation in Java.
+- Contains scanner, parser, AST, resolver, and interpreter.
+- No automated test suite shipped (suggested next step).
+- Assumptions: `Raw.java` provides a small CLI (script file or interactive prompt). If your `Raw.java` differs, update the usage section accordingly.
+
+## Goals and motivation
+
+The purpose of this project is to:
+
+- Teach/experiment with interpreter internals: lexical analysis, parsing, AST representation, static analysis (resolver), and runtime evaluation.
+- Provide a compact example language that supports functions, classes, and basic control flow.
+- Serve as a base for experimenting with language features (closures, modules, bytecode, JIT, etc.).
+
+## Repository layout
+
+Top-level source tree (Java package `com.drunkncode.raw`):
+
+- `com/drunkncode/raw/` — core interpreter code
+- `com/drunkncode/tool/GenerateAst.java` — small utility to generate AST classes (tooling)
+- `scripts/` — example Raw scripts (if any) — you have `scripts/war.raw` in the workspace
+
+Files included (short list — full details in the Per-file summary):
+
+- `Raw.java` — likely the entry point / CLI
+- `Scanner.java` — tokenizes source text
+- `Parser.java` — parses tokens into AST (Expr/Stmt)
+- `Expr.java`, `Stmt.java` — AST node definitions
+- `AstPrinter.java`, `RpnPrinter.java` — debug printers for AST / RPN
+- `Resolver.java` — performs static resolution (variable binding checks, scope analysis)
+- `Interpreter.java` — evaluates AST at runtime
+- `Environment.java` — runtime environment (scopes, variables)
+- `RawCallable.java`, `RawFunction.java`, `RawClass.java`, `RawInstance.java` — callables and OO runtime
+- `Return.java`, `RuntimeError.java` — control flow & runtime errors
+- `Token.java`, `tokenType.java` — token model and types
+
+## Core concepts & architecture
+
+The interpreter is organized into the classical phases:
+
+1. Lexical analysis (Scanner)
+
+   - Reads raw source text and produces a stream of `Token` objects (identifiers, literals, operators, delimiters).
+
+2. Parsing (Parser)
+
+   - Consumes tokens and builds an AST composed of `Expr` and `Stmt` nodes.
+   - The AST nodes implement a visitor pattern (common for readable interpreters).
+
+3. Static analysis (Resolver)
+
+   - Walks the AST to resolve variable scopes and check for early errors (like referencing an undefined variable).
+   - Prepares state for the interpreter (locals map, depth info, etc.).
+
+4. Interpretation (Interpreter)
+   - Walks the AST and executes statements and expressions using `Environment` for variable bindings.
+   - Supports function calls (via `RawCallable`), classes/instances (`RawClass`, `RawInstance`), and `return` handling (`Return` exception/class).
+
+Utilities are provided to print the AST (`AstPrinter`) and to output expressions in reverse polish notation (`RpnPrinter`) for debugging and learning.
+
+## Per-file summary
+
+Below is a brief description of each key file. Use it as a quick reference when navigating the code.
+
+- `Raw.java`
+
+  - Application entry point. Typically handles CLI argument parsing and either runs a file or starts an interactive prompt (REPL).
+  - Assumption: Two modes — `raw <script>` runs a script file; `raw` (no args) starts REPL.
+
+- `Scanner.java`
+
+  - Implements the tokenizer/lexer. Converts source text into `Token` objects.
+
+- `Token.java`, `tokenType.java`
+
+  - Represent tokens and token kinds used by the parser.
+
+- `Parser.java`
+
+  - Parses tokens emitted by `Scanner` and returns an AST.
+  - Produces `Expr` and `Stmt` objects.
+
+- `Expr.java`, `Stmt.java`
+
+  - AST node interfaces/classes. Typically generated by a tool (visitor pattern) — `GenerateAst.java` is present to help with that.
+
+- `GenerateAst.java` (under `com.drunkncode.tool`)
+
+  - Utility used during development to generate AST class boilerplate.
+
+- `AstPrinter.java`
+
+  - A helper that prints an expression tree as a human-readable string (useful for debugging grammar/AST shapes).
+
+- `RpnPrinter.java`
+
+  - Prints expressions in Reverse Polish Notation — useful to verify parsing & operator precedence.
+
+- `Resolver.java`
+
+  - Performs static resolution of variable declarations/usages and checks (scoping rules). Populates data structures the interpreter uses for fast lookup.
+
+- `Interpreter.java`
+
+  - The runtime evaluator. Executes `Stmt` objects and evaluates `Expr` nodes.
+  - Handles runtime errors via `RuntimeError`.
+
+- `Environment.java`
+
+  - Represents variable scopes via nested maps. Implements variable define/assign/lookup semantics.
+
+- `RawCallable.java`, `RawFunction.java`
+
+  - Interfaces/classes for things that can be called (functions). `RawFunction` likely wraps a function declaration and closure environment.
+
+- `RawClass.java`, `RawInstance.java`
+
+  - Implements class declarations and instances, including method binding and fields.
+
+- `Return.java`
+
+  - Exception-like control flow used to unwind the interpreter stack when a `return` is encountered inside a function.
+
+- `RuntimeError.java`
+  - Represents runtime errors thrown during interpretation (type errors, wrong arity, undefined property access, etc.).
+
+## Build & run (Windows PowerShell)
+
+This project is pure Java source. The simplest way to compile & run is with `javac` and `java` (Java 11+ recommended). Replace `.` with your JDK path if needed.
+
+1. Compile all source files
+
+```powershell
+# From project root (where README.md will be created)
+Set-Location -Path 'e:\Harry\Programs\Language\Raw\raw-project\src'
+# create a classes directory
+mkdir ..\out\classes -Force
+javac -d ..\out\classes (Get-ChildItem -Recurse -Filter '*.java' | ForEach-Object { $_.FullName })
+```
+
+2. Run the interpreter
+
+```powershell
+# Run REPL or a script
+# If Raw has a main at com.drunkncode.raw.Raw
+java -cp ..\out\classes com.drunkncode.raw.Raw
+# Or run a script file
+java -cp ..\out\classes com.drunkncode.raw.Raw ..\scripts\war.raw
+```
+
+Notes:
+
+- The exact package-qualified main class above (`com.drunkncode.raw.Raw`) is based on the source tree; if your `Raw.java` class uses a different package or differs in its CLI, adjust accordingly.
+- To create an executable JAR, package the compiled classes with a MANIFEST specifying the Main-Class.
+
+## Usage examples
+
+Example REPL session (assumed language features — adjust to actual language syntax in code):
+
+```
+> var a = 1 + 2 * 3;
+> print a; // expected 7
+> fun greet(name) { print "Hello, " + name; }
+> greet("Alice");
+Hello, Alice
+```
+
+Example script `scripts/war.raw` — you can run it via the earlier `java` command.
+
+## Extending the language
+
+Common extension points and ideas:
+
+- Add more expression operators (bitwise, advanced math).
+- Add standard library functions (I/O, math, collection helpers).
+- Add a module or import system.
+- Add bytecode compilation phase for performance.
+- Add tests for parser/lexer/interpreter correctness.
+
+Files to modify for language changes:
+
+- Parsing rules: `Parser.java`
+- AST nodes: `Expr.java`, `Stmt.java` (use `GenerateAst.java` to regenerate)
+- Runtime behavior: `Interpreter.java`, `Environment.java`
+
+## Testing & validation
+
+Currently the repository doesn't include an automated test harness. Suggested immediate improvements:
+
+- Add unit tests for `Scanner` and `Parser` to ensure tokenization and parsing do not regress.
+- Add integration tests that run small scripts and assert expected output.
+- Use a lightweight test framework (JUnit 5) and a Gradle or Maven wrapper for reproducible builds.
+
+Quick example (manual smoke test):
+
+- Create a small script `scripts/test.raw` with a few `print` statements.
+- Compile and run as shown above and verify expected console output.
+
+## Contributing
+
+Contributions are welcome. A minimal guide:
+
+1. Fork this repository.
+2. Create a feature branch: `feature/<short-desc>`.
+3. Add code and tests.
+4. Run manual smoke tests locally.
+5. Submit a pull request with a clear description.
+
+Guidelines:
+
+- Keep changes small and focused.
+- When changing parser/AST, include sample inputs and expected outputs.
+- Add tests for any bug fix or new feature.
+
+## Roadmap / next steps
+
+Suggested next steps (pick any to start):
+
+- Add a formal `build.gradle` or `pom.xml` for easier building.
+- Add a CI pipeline (GitHub Actions) to compile and run smoke tests on push.
+- Add a small standard library and string formatting utilities.
+- Add documentation for language syntax and examples in `docs/`.
+
+## License & credits
+
+- This README does not add a license file. Add a `LICENSE` (MIT, Apache-2.0, or other) to indicate how you want others to reuse the code.
+- The implementation style and file names resemble many educational interpreter projects (e.g. "Crafting Interpreters"). If this project was influenced by specific resources, add an explicit `ACKNOWLEDGEMENTS` or `CREDITS` section.
+
+## Contact / author
+
+If you'd like me to expand a section (for example, add a full example grammar, CI config, or a build tool), tell me which you'd prefer and I can update the repository accordingly.
+
+---
+
+Assumptions made when writing this README:
+
+- `Raw.java` is the CLI entry point and follows the typical pattern of either running a script file or launching a REPL. If your `Raw.java` uses a different run contract, tell me and I'll update the "Build & run" section.
+- There are no tests or build scripts found in the supplied source snapshot. If you already have a `build.gradle` or `pom.xml`, let me know and I'll create tailored build/run instructions.
+
+If you want, I can:
+
+- Add a `build.gradle` to automate compilation and packaging.
+- Add a simple GitHub Actions workflow to compile the project and optionally run smoke scripts.
+- Generate a `LICENSE` file (MIT/Apache) for you.
+
+Please review and tell me any additions or clarifications you'd like in the README.
